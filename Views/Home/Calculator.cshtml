@@ -1,0 +1,142 @@
+﻿
+@{
+    ViewBag.Title = "Calculator App";
+}
+
+<body>
+    <div style="margin: auto; width: 75%; text-align:center">
+        <div id="welcome" style="margin: auto; width: 75%; text-align: center">
+            <h2>Please make a selection and click 'Calculate' to continue.</h2>
+        </div>
+        <div id="solution" style="margin: auto; width: 50%; text-align: left">
+            <h1 class="result">V ≈ </h1>
+            <i>Solution</i>
+            <h5 class="formula">V= πr²h = π * 1² * 10 ≈ </h5>
+        </div>
+        <br />
+        <select id="typeDropdown">
+            <option>Volume</option>
+            @*<option>2D Area</option>*@
+            @*<option>2D Perimeter</option>*@
+            @*<option>3D Area</option>*@
+            @*<option>3D Perimeter</option>*@
+            @* Etc...*@
+            @* More options can be added as needed*@
+        </select>
+        <select id="shapeDropdown">
+            <option disabled selected style="display:none"></option>
+            <option value="Cylinder">Cylinder</option>
+            <option value="Cuboid">Cuboid</option>
+            <option value="Cone">Cone</option>
+        </select>
+
+        @*form containing all the input fields to be used*@
+        <form id="form" onsubmit="return false;">
+            <div style="margin-left:25%; margin-right:25%">
+                <div class="option1" style="margin:5px; padding:5px; text-align:left">
+                    <b class="option1text"></b>
+                    <input class="input1" pattern="[0-9]" type="number" min="0" max="1000" style="float: right; width: 50%" />
+                </div>
+                <div class="option2" style="margin:5px; padding:5px; text-align:left">
+                    <b class="option2text"></b>
+                    <input class="input2" pattern="[0-9]" type="number" min="0" max="1000" style="float: right; width: 50%" />
+                </div>
+                <div class="option3" style="margin:5px; padding:5px; text-align:left">
+                    <b class="option3text"></b>
+                    <input class="input3" pattern="[0-9]" type="number" min="0" max="1000" style="float:right; width:50%" />
+                </div>
+            </div>
+            <div style="padding:5%">
+                <input type="button" id="clear" value="Clear">
+                <input type="submit" id="submit" value="Submit">
+            </div>
+        </form>
+    </div>
+</body>
+<script>
+    function clear() {
+        $('.option1text').val("")
+        $('.option2text').val("")
+        $('.option3text').val("")
+        $('.input1').val("")
+        $('.input2').val("")
+        $('.input3').val("")
+        $('.option1').hide()
+        $('.option2').hide()
+        $('.option3').hide()
+        $('#shapeDropdown').val("")
+    }
+
+    $(document).ready(function () {
+        $('#solution').hide()
+        $('.option1').hide()
+        $('.option2').hide()
+        $('.option3').hide()
+
+        $('#clear').click(function () {
+            clear()
+            $('#solution').hide()
+            $('#welcome').show()
+
+        });
+
+        $('#submit').click(function () {
+            var i1 = $('.input1').val()
+            var i2 = $('.input2').val()
+            var i3 = $('.input3').val()
+            var shapeChoice = $('#shapeDropdown').val()
+            var model = {
+                input1: i1,
+                input2: i2,
+                input3: i3,
+                shape: shapeChoice,
+                calculationType: $('#typeDropdown').val(),
+                calculationTime: new Date($.now())
+            }
+            if ((0 <= i1 && i1 <= 1000) && (0 <= i2 && i2 <= 1000) && ((0 <= i3 && i3 <= 1000) || shapeChoice != "Cuboid")) {
+                if (i1 != "" && i2 != "" && (shapeChoice != "Cuboid" || i3 != "")) {
+                    $.ajax({
+                        url: '/Home/Calculator',
+                        type: 'POST',
+                        data: model,
+                        success: function (result) {
+                            // Update result and formula fields
+                            var json = JSON.parse(result)
+                            clear()
+                            $('.result').text(json["result"])
+                            $('.formula').text(json["formula"])
+                            $('#solution').show()
+                            $('#welcome').hide()
+
+                        },
+                        error: function (request, status, error) {//error handling for any invalid data
+                            alert(error)
+                        }
+                    });
+                }
+            }
+        });
+
+        //on dropdown choice, change the input fields respectively
+        $('#shapeDropdown').change(function () {
+
+            var selectedValue = $(this).val();
+            if (selectedValue == "Cuboid") {
+                $('.option1text').text("Length")
+                $('.option2text').text("Width")
+                $('.option3text').text("Height")
+                $('.option3').show()
+            } else {
+                $('.option1text').text("Radius")
+                $('.option2text').text("Height")
+                $('.option3text').text("")
+                $('.option3').hide()
+                $('.input3').val("")
+
+            }
+            $('.option1').show()
+            $('.option2').show()
+        });
+    });
+
+</script>
